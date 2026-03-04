@@ -114,20 +114,12 @@ class NutritionController:
             weeks=plan_weeks,
         )
 
-        # --- 6. LLM — Meal plan (lazy import to keep deterministic core isolated) ---
-        meal_plan = None
-        try:
-            from skills.planning.multi_week_planner_skill import MultiWeekPlannerSkill
-            planner = MultiWeekPlannerSkill()
-            meal_plan = planner.execute(
-                macro_targets=macro_result,
-                diet_type=user_data.get("diet_type", "omnivore"),
-                weeks=plan_weeks,
-                goal=user_data["goal"],
-            )
-        except Exception as llm_error:
-            # LLM failure must NOT crash deterministic state persistence
-            meal_plan = {"error": str(llm_error), "weeks": []}
+        # --- 6. Meal plan ---
+        # Plans are generated on-demand via /plan (cmd_plan → WeeklyMealPlanSkill).
+        # Do NOT pre-generate the full multi-week plan here — it makes signup slow
+        # (1 OpenAI call per week × N weeks = very long wait for the user).
+        meal_plan = {"weeks": []}
+
 
         # --- 7. Persist NutritionState ---
         state = NutritionState(
