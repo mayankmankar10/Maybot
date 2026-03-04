@@ -1,0 +1,43 @@
+# systemd/ai_nutrition.service
+# Section 4.5 — Architecture document.
+# Runs FastAPI as a managed background service.
+#
+# INSTALL:
+#   sudo cp systemd/ai_nutrition.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable ai_nutrition
+#   sudo systemctl start ai_nutrition
+#
+# COMMANDS:
+#   sudo systemctl status ai_nutrition
+#   sudo journalctl -u ai_nutrition -f
+
+[Unit]
+Description=Adaptive AI Nutrition Agent (FastAPI)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/adaptive_ai_nutrition
+EnvironmentFile=/home/ubuntu/adaptive_ai_nutrition/.env
+
+ExecStart=/home/ubuntu/adaptive_ai_nutrition/venv/bin/uvicorn \
+    app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 2
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ai_nutrition
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
