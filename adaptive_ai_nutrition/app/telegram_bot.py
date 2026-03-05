@@ -702,9 +702,13 @@ async def cmd_plan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         def acc(actual: float, target: float) -> str:
             if target == 0:
                 return "—"
-            pct = actual / target * 100
-            icon = "✅" if 90 <= pct <= 110 else ("⚠️" if 80 <= pct <= 120 else "❌")
-            return f"{icon} {pct:.0f}%"
+            raw_pct = (actual / target) * 100
+            # Calculate true accuracy: being 5% over is the same as being 5% under (95% accurate)
+            accuracy = 100.0 - abs(100.0 - raw_pct)
+            accuracy = max(0.0, accuracy)  # Don't let it go below 0%
+            
+            icon = "✅" if 90 <= raw_pct <= 110 else ("⚠️" if 80 <= raw_pct <= 120 else "❌")
+            return f"{icon} {accuracy:.0f}%"
 
         acc_cal = acc(avg_cal, tgt_cal)
         acc_p   = acc(avg_p,   tgt_p)
