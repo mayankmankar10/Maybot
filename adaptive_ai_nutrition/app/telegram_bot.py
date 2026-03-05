@@ -370,17 +370,26 @@ async def setup_avoid(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
     ud = context.user_data
     avoid_display = ud["avoid"] or "Nothing"
+    
+    # Clean up variables to prevent Markdown parsing errors (especially underscores like in 'very_active')
+    activity_disp = str(ud['activity']).replace("_", " ").title()
+    gender_disp = str(ud['gender']).title()
+    goal_disp = str(ud['goal']).title()
+    intensity_disp = str(ud['intensity']).title()
+    diet_disp = str(ud['diet']).title()
+    avoid_clean = avoid_display.replace("_", " ").replace("*", "").replace("`", "")
+
     summary = (
         f"📋 *Your Plan Summary*\n\n"
         f"⚖️ Weight:    {ud['weight']} kg\n"
         f"📏 Height:    {ud['height']} cm\n"
         f"🎂 Age:       {ud['age']}\n"
-        f"👤 Gender:    {ud['gender']}\n"
-        f"🏃 Activity:  {ud['activity']}\n"
-        f"🎯 Goal:      {ud['goal']}\n"
-        f"⚡ Intensity: {ud['intensity']}\n"
-        f"🥗 Diet:      {ud['diet']}\n"
-        f"🚫 Avoid:     {avoid_display}\n\n"
+        f"👤 Gender:    {gender_disp}\n"
+        f"🏃 Activity:  {activity_disp}\n"
+        f"🎯 Goal:      {goal_disp}\n"
+        f"⚡ Intensity: {intensity_disp}\n"
+        f"🥗 Diet:      {diet_disp}\n"
+        f"🚫 Avoid:     {avoid_clean}\n\n"
         f"Everything look right?"
     )
     keyboard = InlineKeyboardMarkup([[
