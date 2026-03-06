@@ -1121,6 +1121,47 @@ def build_application() -> Application:
     return application
 
 
+async def init_webhook() -> None:
+    """
+    Initialize PTB for webhook mode.
+    Called from FastAPI lifespan startup.
+    """
+    global _ptb_app
+
+    if not TOKEN:
+        logger.warning("TELEGRAM_TOKEN not set — bot disabled.")
+        return
+
+    _ptb_app = build_application()
+
+    await _ptb_app.initialize()
+    await _ptb_app.start()
+    logger.info("Telegram PTB initialized for webhooks.")
+
+
+async def process_webhook_update(update_json: dict) -> None:
+    """Feed an incoming webhook update from FastAPI to PTB."""
+    if _ptb_app is None:
+        return
+    update = Update.de_json(data=update_json, bot=_ptb_app.bot)
+    await _ptb_app.update_queue.put(update)
+
+
+async def stop_webhook() -> None:
+    """
+    Gracefully stop PTB.
+    Called from FastAPI lifespan shutdown.
+    """
+    global _ptb_app
+    if _ptb_app is None:
+        return
+
+    logger.info("Stopping Telegram PTB…")
+    await _ptb_app.stop()
+    await _ptb_app.shutdown()
+    logger.info("Telegram PTB stopped.")
+
+
 async def start_polling() -> None:
     """
     Initialize PTB and start long polling.
